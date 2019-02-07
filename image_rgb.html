@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js image rgb</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #61443e;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+
+				/* background-color: #bfd1e5; */
+				background-color: #ffffff;
+				margin: 0px;
+			}
+
+			a {	color: #a06851;	}
+
+			canvas {
+				margin: 20px;
+				margin-top: 40px;
+			}
+
+		</style>
+	</head>
+	<body>
+
+        <div id="info">
+            <p>image rgb</p>	
+        </div>
+
+		<div id="container"></div>
+
+
+		<script src="lib/three.js"></script>
+		<script src="lib/WebGL.js"></script>
+		<script src="lib/CopyShader.js"></script>
+
+		<script>
+
+			( function closure() {
+
+				'use strict';
+
+				if ( WEBGL.isWebGLAvailable() === false ) {
+
+					document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+				}
+
+				var loader = new THREE.TextureLoader();
+				loader.load( "textures/fxaa_scene.png", function onLoad( texture ) {
+
+					var image = texture.image;
+					texture.minFilter = THREE.LinearFilter;
+					texture.magFilter = THREE.LinearFilter;
+
+					var basicMaterial = new THREE.MeshBasicMaterial( { map: texture } );
+
+					var shader = THREE.CopyShader;
+					var uniforms = THREE.UniformsUtils.clone( shader.uniforms ); 
+					uniforms.redAdjustment = { value: 0.3 };
+					uniforms.greenAdjustment = { value: 1 };
+					uniforms.blueAdjustment = { value: 1 };
+
+					var shaderMaterial = new THREE.ShaderMaterial( {
+						uniforms: uniforms,
+						vertexShader: shader.vertexShader,
+						fragmentShader: shader.fragmentShader
+					} );
+
+					shaderMaterial.uniforms.tDiffuse.value = texture;
+					shaderMaterial.fragmentShader = [
+
+						"uniform float opacity;",
+
+						"uniform sampler2D tDiffuse;",
+
+						"uniform float redAdjustment;",
+						"uniform float greenAdjustment;",
+						"uniform float blueAdjustment;",
+
+						"varying vec2 vUv;",
+
+						"void main() {",
+
+							"vec4 texel = texture2D(tDiffuse, vUv);",
+							"vec4 tex_color = opacity * texel;",
+							"gl_FragColor = vec4(tex_color.r * redAdjustment, tex_color.g * greenAdjustment, tex_color.b * blueAdjustment, tex_color.a);",
+
+						"}"
+
+					].join( "\n" )
+
+					var plane = new THREE.PlaneBufferGeometry( 1, 1 );
+
+					var quad1 = new THREE.Mesh( plane, basicMaterial );
+					var scene1 = new THREE.Scene();
+					scene1.add( quad1 );
+
+					var quad2 = new THREE.Mesh( plane, shaderMaterial );
+					var scene2 = new THREE.Scene();
+					scene2.add( quad2 );
+
+					var camera = new THREE.OrthographicCamera( - 0.5, 0.5, 0.5, - 0.5, - 0.5, 0.5 );
+
+					var container = document.getElementById( 'container' );
+
+
+					var renderer1 = new THREE.WebGLRenderer();
+					renderer1.setPixelRatio( window.devicePixelRatio );
+					renderer1.setSize( image.naturalWidth, image.naturalHeight );
+					container.appendChild( renderer1.domElement );
+
+					var renderer2 = new THREE.WebGLRenderer();
+					renderer2.setPixelRatio( window.devicePixelRatio );
+					renderer2.setSize( image.naturalWidth, image.naturalHeight );
+					container.appendChild( renderer2.domElement );
+
+					renderer1.render( scene1, camera );
+					renderer2.render( scene2, camera );
+				} );
+
+			} )();
+
+		</script>
+	</body>
+</html>
