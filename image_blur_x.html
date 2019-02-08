@@ -61,7 +61,7 @@
 
 					var shader = THREE.CopyShader;
 					var uniforms = THREE.UniformsUtils.clone( shader.uniforms ); 
-					uniforms.step = { value: 1.0/image.naturalWidth };
+					uniforms.step = { value: 1.0 / image.naturalWidth };
 
 					var shaderMaterial = new THREE.ShaderMaterial( {
 						uniforms: uniforms,
